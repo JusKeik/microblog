@@ -1,0 +1,36 @@
+services:
+  api:
+    build:
+      context: .
+      target: production
+    container_name: microblog-api
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+psycopg://microblog:microblog@db:5432/microblog
+    volumes:
+      - media_data:/app/static/media
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    container_name: microblog-db
+    environment:
+      POSTGRES_USER: microblog
+      POSTGRES_PASSWORD: microblog
+      POSTGRES_DB: microblog
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U microblog -d microblog"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  media_data:
